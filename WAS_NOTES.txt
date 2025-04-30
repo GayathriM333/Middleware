@@ -1,0 +1,31 @@
+WAS VERSIONS-8.5.5.18 to 8.5.5.22/9.0.5.6 to 9.0.5.14 || IBM HTTP - Tomcat- Apache webserver-
+---------------------------------------------------------------------------------------
+****What is websphere: platform which provides infrastructure to run the business applications. Middleware act btw frontend and backend
+****Difference between appserver and webserver: Webserver allows clients to visit pages in the browser(HTTP requests are handled by this, provides security. it mainly for static content like webpages.
+Appserver handles tasks like processing client requests, managing sessions, and facilitating communication with databases or other resources
+****what is was and how it is differ from other appservers: application server from IBM, designed for running enterprise Java applications. It differs from other application servers by offering features like advanced transaction management, strong security, and integration with other IBM WebSphere products, making it suitable for large, complex deployments
+****explain architecture of Websphere and its components: 
+three-tier architecture: presentation tier is the user interface and communication layer,where end user interacts with application. Its main purpose is to display information & this toplevel tier can run on a web browser. basically provides userinterface.usually a webpage and the content can be static or dynamic
+application tier also known as logic tier.in this information that is collected in presentation tier is processed by user inputs using business logic.
+database server is the data or backend tier of web application. it runs on db management softwares.
+****when user hit the url, the request goes to webserver and display the static content. if is of dynamic content then the request will be taken to app server by webserver and communication happens by plugin. then app server process the request based on user inputs and then collects the data which is in dackend tier i.e,DB at last displays the output
+****Network deployment - is clustered environment where multiple  application servers are managed as single domain by Deployment manager.this architecture is used for large scale deployments, particularly those requiring high availability and scalability.
+Clustering: multiple app servers are grouped together to form cluster,allowing for load distribution and redundancy. horizontal clustering refers to deploying multiple application servers across different physical machines (nodes) to increase scalability and availability. Vertical clustering, on the other hand, involves running multiple application servers on the same physical machine
+DMGR:A central administrative agent that manages entire cluster and provides a unified view of all managed nodes
+Nodeagents: responsible for configuration synchronization between the Deployment Manager and the Node
+cell: a logical grouping of one or more application servers, managed together by a central administration console
+Nodes: They are individual physical or virtual machines where application servers reside
+diff btw cell and cluster: A cell can contain multiple clusters and nodes. A WebSphere cluster is a group of two or more application servers that work together
+****What is the difference between load balancer and failover cluster? Load balancing distributes request processing across multiple servers. Failover redirects requests to alternate servers if the originally requested server is unavailable or too slow
+****Types of profiles:
+profile: it defines the runtime environment. profile includes all the files that the server processes in run time env 
+cell profiles: creation of cell profile generates a dmgr and federated node in one iteration through the profile management tool. 
+custom profiles: it does not include default applications or a default server like app serverprofile.  add the node to the deployment manager cell.then you can use the administrative interface of deployment manager to customize managed node by creating clusters and application servers.
+application server profile: ability to scale up a standalone application server profile by adding application server node into deployment manager cell. multiple applicationserver processes in a cell can deploy an application that is in demand
+management profile: these profiles manage aspects of the server such as DM,Administering agents,job management.
+Secure proxy profile: use secure proxy server to take requests from internet and forward them to application server resides in DMZ
+deployment manager server: basic function of deployment manageris to deploy application to a cell of application servers,which it manages. each application server that belongs to cell is managed node{{{{these profiles are created and managed by profile management tool or manageprofiles cmd}}}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+WAS INSTALLATION:
+before WAS8 - update installer and after WAS8 - 
