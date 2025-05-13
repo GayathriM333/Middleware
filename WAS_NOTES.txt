@@ -1,4 +1,13 @@
-WAS VERSIONS-8.5.5.18 to 8.5.5.22/9.0.5.6 to 9.0.5.14 || IBM HTTP - Tomcat- Apache webserver-
+WAS VERSIONS-8.5.5.18 to 8.5.5.22/9.0.5.6 to 9.0.5.14 || 
+IBM HTTP - 
+Tomcat- 9.0.37/98/102....
+Apache webserver-
+
+
+
+
+
+
 ---------------------------------------------------------------------------------------
 ****What is websphere: platform which provides infrastructure to run the business applications. Middleware act btw frontend and backend
 ****Difference between appserver and webserver: Webserver allows clients to visit pages in the browser(HTTP requests are handled by this, provides security. it mainly for static content like webpages.
@@ -9,7 +18,8 @@ three-tier architecture: presentation tier is the user interface and communicati
 application tier also known as logic tier.in this information that is collected in presentation tier is processed by user inputs using business logic.
 database server is the data or backend tier of web application. it runs on db management softwares.
 ****when user hit the url, the request goes to webserver and display the static content. if is of dynamic content then the request will be taken to app server by webserver and communication happens by plugin. then app server process the request based on user inputs and then collects the data which is in dackend tier i.e,DB at last displays the output
-****Network deployment - is clustered environment where multiple  application servers are managed as single domain by Deployment manager.this architecture is used for large scale deployments, particularly those requiring high availability and scalability.
+****Network deployment 
+- is clustered environment where multiple  application servers are managed as single domain by Deployment manager.this architecture is used for large scale deployments, particularly those requiring high availability and scalability.
 Clustering: multiple app servers are grouped together to form cluster,allowing for load distribution and redundancy. horizontal clustering refers to deploying multiple application servers across different physical machines (nodes) to increase scalability and availability. Vertical clustering, on the other hand, involves running multiple application servers on the same physical machine
 DMGR:A central administrative agent that manages entire cluster and provides a unified view of all managed nodes
 Nodeagents: responsible for configuration synchronization between the Deployment Manager and the Node
@@ -25,7 +35,75 @@ application server profile: ability to scale up a standalone application server 
 management profile: these profiles manage aspects of the server such as DM,Administering agents,job management.
 Secure proxy profile: use secure proxy server to take requests from internet and forward them to application server resides in DMZ
 deployment manager server: basic function of deployment manageris to deploy application to a cell of application servers,which it manages. each application server that belongs to cell is managed node{{{{these profiles are created and managed by profile management tool or manageprofiles cmd}}}
+***how to create dmgr profile cmd:./manageprofiles.sh -create -profileName Dmgr01 -profileType DEPLOYMENT_MANAGER -profilePath /opt/IBM/WebSphere/Profiles/Dmgr01 -templatePath /opt/IBM/WebSphere/profileTemplates/management -adminUserName admin -adminPassword admin123
+create app server profile:  /opt/IBM/WebSphere/Profiles/AppSrv01-./manageprofiles.sh -create -profileName AppSrv01 -profileType APPLICATION_SERVER -profilePath /opt/IBM/WebSphere/Profiles/AppSrv01 -templatePath /opt/IBM/WebSphere/profileTemplates/default -adminUserName admin -adminPassword admin123
+custom profile does not include app server and federation required. adding a node to an existing distributed environment managed by dmgr
+(look at the DAC setup)
+
+
+
+
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 WAS INSTALLATION:
-before WAS8 - update installer and after WAS8 - 
+before WAS8 - update installer and after WAS8 we have IBMIM.
+first we install base version - 8.5.5.0 then we do fixpack upgrade (for this we need min 10GB space, running instances, AF (curl cmd),offerings-natives-repository.config-repository.xml(head cmd to get productid)
+we can -log /tmp at last imcl cmd so that the logs get generated.aboutthisfile.txt,versioninfo.sh(installation path), to check the status of the FP we get historyinfo.sh under appserver/bin
+now we create profiles-bin directory-manageprofiles.sh ->dm,node-node federation node/bin will be created-cluster creation 2 nodes - jms, dbclasspath jar, jndiunique,samename we use in datasource **troubleshooting of testconnectivity(rename jndi)
+---managesdks,deployment-installed apps   **host not found = virtual host (dns or webserver hostport, context root& logs path in jvm scope in websphere variables.
+
+---was 8.5.5.18 to 22 -java 1.7 is not compatible
+first backupprofile.sh & was85 folderbkp, stopnodecmd/kill,clearclasscache,OSGcfgninit(conf initialization)------node/bin&&dm/bin -->logschecks if nodeagent is not up, IM version 1.8to1.9
+bug fixes, security, performance.
+IBMIHS upgrade- (after upgrade consumer application is not working as it low version and not compatible or other reason could be TLS 1.2 is not compatible 8.5.5.26
+sslhandshake-mutual auth-(provider personal certsin consumers && cipher compatibility&& TLS version - root certs ad
+----------------------------------------------------------------------------
+LB- webserver-plugin- appserver(jks)-DB/MQ
+dns url is not working - webhostname and port - CN mismatch(modl cert to prod cert- intermittent issue)
+-------------------------------------------------------------------------------
+httpd.conf - servername, port listen, server root, document root(static content),logs, virtualhost(ssl,servername,port) kdb path,plugin path,loadmodules(ssl,plugin),
+apache(proxy- reverseproxy)(apachectl-httpd configurationpath)
+plugin - forwardrequests to app server
+managemodules - deployment - map webservers
+dmgr- generate - plugincreate- dmgr file && propagate = copy to paste in webserver from dmgr.
+
+plugin file - jvm name ,clusters, virtual hosts, ports,app names,contextroot, 404, virtual host not found
+
+issues:  port conflict issues,jndi names under same cluster,multiple applications can be deployed but contextroot must be diff
+resources.xml under profile/cluster scope, security.xml(cert update, db id and pswd),server.xml(nodes scope- heap size)
+-exchangesigners(dmgr - node)
+IO exception- certs add ( root separately and personal certs)
+-----------------------------------------------------------------
+troubleshooting issues process- check logs, details like any recentchanges,reboot, slow application, check working region,intermittent issue, flow, db down, trace logs
+
+
+=========================================================================================================================================================================================================================
+
+
+1.introduce yourself :
+Hi everyone, Thank you for giving me this opportunity to be interviewed for this position today.My name is gayathri, I have completed my graduation in 2019. 
+I was placed in campus placements right after my graduation.I have overall 6 years of IT experience. Previously i have worked as websphere admin in wipro citibank as myclient 
+and from past3 years i have been working with cognizant AIG as my client and i'm working on was, tomcat and also supporting datapower and MQ 
+I involved in major WAS lift and shift  migration from on prem to cloud servers. I have been doing tomcat upgrades lately. also supporting all the BAU activities.
+Having said that, im confident i have skills and qualities to excel in the role as i can manage significant workload.
+I am excited about the opportunity to bring my expertise to your organization and support its middleware infrastructure.
+thank you
+
+2.explain request flow ? whenever user makes request for example www.abc.com then request will be forwarded to DNS.  DNS will forward request to LB. LB will send the request to webserver. 
+now if the request is looking for static content like html pages or images then webserver itself gets the response. if it is looking for dynamic content like webserver routes that request to corresponding appserver with the help of plugin
+at the time of webserverstartup, it loads httpd.conf file and it contains path of plugincfg.xml file. this file contains all the details of app servers. so that webserver forwards request to app servers
+app servers has 2 containers- web container and EJB containers--->if request is looking for web resources like servlets,html etc webcontainers itself generate response.  
+and if it is looking for ejb resources like session beans etc thatrequest will be forwarded to ejb container through jndi. if requestrequired database interaction then it will go to connection pool, connection object once transaction is completed then it will return to pool.
+finally request forward from webcontainer to webserver and webserver to end user
+
+3. day to day activities - we mostly work on deployments, scheduled restarts, data source creations, configuration changes in tomcat, SSL renewals and troubleshooting. 
+I majorly on WAS fixpack upgrades and tomcat upgrades.
+
+4. how do i install was? i have only worked on was8 and 9.
+first we have to check the pre-requFrom was8 we have installation manager 
+linux version (8.10) - to know the version (uname -a)(cat /etc/os-release)  --------8 GB RAM and 10GB disk space, 
+
+5. types of deployments
+6. linux commands
+7. jndi, connection pool, default ports, heap size, dumps, logs, ssl cmds, ldap/global security, troubleshooting(WAS.pdf),virtual host/contextroot, plugin file generation cmd, paths, configuration files
