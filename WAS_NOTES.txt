@@ -101,8 +101,30 @@ finally request forward from webcontainer to webserver and webserver to end user
 I majorly on WAS fixpack upgrades and tomcat upgrades.
 
 4. how do i install was? i have only worked on was8 and 9.
-first we have to check the pre-requFrom was8 we have installation manager 
+first we have to check the pre-req was8 we have installation manager 
 linux version (8.10) - to know the version (uname -a)(cat /etc/os-release)  --------8 GB RAM and 10GB disk space, 
+if this is fixpack then 8.5.5.18 to 8.5.5.22 - doesnt support java 1.7
+take backup of wasprofile / backupprofile.sh - under appserver bin/ ---------./backupProfile.sh -profileName AppSrv01 -backupFile /backup/location/AppSrv01Backup.zip
+stop the jvm, check the existing version
+./managesdk.sh -listEnabledProfileAll && ./managesdk.sh -enableProfileAll -sdkname 1.8.64 & syncnode
+ now go to home directory - etc/.ibm/registry  - cat installationManager.bat(to get imcl path ) like home/usradmin/IBM/InstallationManager/eclipse/tools - verify imcl is there or not
+ ./imcl ListInstalledpackges------kill all services at a time -----./imcl uninstall 7.0.1.0-WS-WASJAVASDK7-linuxs39064-IFPH34273 -installationDirectory /opt../Appserverbin -sVP
+ verify java 1.7 packages are uninstalled.
+---->issue**-/export/opt/was85dev/websphere/Apsserverbin/bin/sdk/_setupsdk1.7_64.sh - no such file or directory
+resolution - /opt/soft/was85dev/websphere/AppserverBin/properties/sdk/   -----> vi cmdDefaultSDK.properties now  change COMMAND_DEFAULT_SDK=1.8_64_bundled
+chnaging java version ->./managesdk.sh -enabledprofile -profilename apacds85 -sdkname 1.8.64
+now cmd for fixpack - ./imcl install <offeringID_version> -repositories <repository.config file path> -installationDiectory <appserverbinpath> -acceptLicense -showverboseprogress
+
+
+
+
+
+
+
+
+
+
+
 
 5. types of deployments
 6. linux commands
