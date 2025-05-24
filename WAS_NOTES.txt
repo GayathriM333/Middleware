@@ -2,7 +2,27 @@ WAS VERSIONS-8.5.5.18 to 8.5.5.22/9.0.5.6 to 9.0.5.14 ||
 IBM HTTP - 
 Tomcat- 9.0.37/98/102....
 Apache webserver-
-
+--------------------------------------------------------------------------------------------------------------------------------
+ Websphere To Tomcat migration process:(issues that we faced is 500 error)
+The idea is to migrate with keeping the same level of J2EE or it could break somethings like deprecated methods etc..
+- first check Java versions on both sides, probably use the same versions even they are coming from different companies(IBM,oracle).
+Analyze Dependencies: Identify Java EE features used by your application, such as EJBs, JMS, JPA, or web services.Tomcat supports servlets, JSP, and basic web applications.
+- check J2EE versions supported by IBM Websphere, choose tomcat accordingly.
+- ...Download and install the appropriate version of Tomcat for your application’s Java version., copy your application to webapps directory.(Ensure your application package is compatible with Tomcat’s WAR structure)
+- you might have some libraries to copy in lib directory(jdbc etc) -----Define context.xml files for JNDI resources, database connections, etc.
+nclude necessary dependencies in the lib directory or within the application’s WEB-INF/lib folder. web.xml: Ensure the deployment descriptor matches Tomcat's requirements. Remove WebSphere-specific entries.
+Convert WebSphere-specific JNDI configurations to Tomcat’s format in context.xml.---->Resource name="jdbc/MyDB"
+          auth="Container"
+          type="javax.sql.DataSource"
+          maxTotal="20"
+          maxIdle="10"
+          maxWaitMillis="-1"
+          username="dbuser"
+          password="dbpass"
+          driverClassName="com.mysql.jdbc.Driver"
+          url="jdbc:mysql://localhost:3306/mydb" />
+- check tomcat logs particularly catalina.out to see the deployments result.
+-----> There is no IHS for tomcat, you will edit some files. these files should be considered(server.xml- where you define listening port, attributes, setenv.sh - place where you declare JVMoptions like Java_home, memory settings such as heap,log verbosity like printGC details...(issue xloggc got deprecated so got issue)
 
 
 
