@@ -1,9 +1,11 @@
-WAS VERSIONS-8.5.5.18 to 8.5.5.22/9.0.5.6 to 9.0.5.14 || 
-IBM HTTP - 
+WAS VERSION-8.5.5.18 to 8.5.5.22/9.0.5.6 to 9.0.5.14 || 
+IBM HTTP - 8.5.5.25
 Tomcat- 9.0.37/98/102....
 Apache webserver-
 --------------------------------------------------------------------------------------------------------------------------------
- Websphere To Tomcat migration process:(issues that we faced is 500 error)
+ Websphere To Tomcat migration process:
+
+Servlet spec-4.0 && tomcat 9.0.x and {{latest released 9.0.105 and java supported 8 and later}}{{10.1.41 and 11 or later}}
 The idea is to migrate with keeping the same level of J2EE or it could break somethings like deprecated methods etc..
 - first check Java versions on both sides, probably use the same versions even they are coming from different companies(IBM,oracle).
 Analyze Dependencies: Identify Java EE features used by your application, such as EJBs, JMS, JPA, or web services.Tomcat supports servlets, JSP, and basic web applications.
@@ -11,7 +13,8 @@ Analyze Dependencies: Identify Java EE features used by your application, such a
 - ...Download and install the appropriate version of Tomcat for your application’s Java version., copy your application to webapps directory.(Ensure your application package is compatible with Tomcat’s WAR structure)
 - you might have some libraries to copy in lib directory(jdbc etc) -----Define context.xml files for JNDI resources, database connections, etc.
 nclude necessary dependencies in the lib directory or within the application’s WEB-INF/lib folder. web.xml: Ensure the deployment descriptor matches Tomcat's requirements. Remove WebSphere-specific entries.
-Convert WebSphere-specific JNDI configurations to Tomcat’s format in context.xml.---->Resource name="jdbc/MyDB"
+Convert WebSphere-specific JNDI configurations to Tomcat’s format in context.xml.
+---->Resource name="jdbc/MyDB"
           auth="Container"
           type="javax.sql.DataSource"
           maxTotal="20"
@@ -22,9 +25,16 @@ Convert WebSphere-specific JNDI configurations to Tomcat’s format in context.x
           driverClassName="com.mysql.jdbc.Driver"
           url="jdbc:mysql://localhost:3306/mydb" />
 - check tomcat logs particularly catalina.out to see the deployments result.
------> There is no IHS for tomcat, you will edit some files. these files should be considered(server.xml- where you define listening port, attributes, setenv.sh - place where you declare JVMoptions like Java_home, memory settings such as heap,log verbosity like printGC details...(issue xloggc got deprecated so got issue)
 
-
+ISsues: clientAuth=true (it is for mutual authentication).as for keystore you supposed to use the same keystore for certificates.therefore when client connects with its cert, tomcat will validate that corresponding cert located in keystore.
+(set to true if ssl stack to require a valid certificate chain from client before accepting a connection)
+-----> There is no IHS for tomcat, you will edit some files. these files should be considered(server.xml- where you define listening port, attributes, setenv.sh - place where you declare JVMoptions like Java_home, memory settings(-xms1024m-1GB) such as heap,log verbosity like printGC details...(issue xloggc got deprecated so got issue)
+Tomcat upgrade - tomcat 8.5.32 to 9.0.102 --> we are basically not touching the existing setup. we are using ansible playbook to first create folder structure and install the latestversion by extracting the zip placed in jumpbox. using jinja templates of all the configuration files like server.xml,setenv.sh, catalina.properties etc and push the files content to destserver and give them file permissions.
+****SSLHOSTConfig deprecated values of clientauth=false
+difference between tomcat 8 and 9 : java version requirement(java8 and later for tomcat9),,tomcat9 implements servlet 4.0,jsp2.3required by javaEE8 whereas tomcat8 supports earlier version
+****Integrating tomcat with Apache:
+Apache HTTP Server handles static content (HTML, CSS, JS, etc.), while Tomcat processes dynamic Java-based content. This setup is typically achieved using a connector like mod_proxy or mod_jk
++
 
 
 
