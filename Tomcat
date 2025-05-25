@@ -30,7 +30,207 @@ The server presents its SSL certificate to the client for validation.
 The client validates the server’s certificate using its trusted Certificate Authority (CA) store.
 The connection is established without the client providing its certificate.
 
-server.xml: 
+-----> There is no IHS for tomcat, you will edit some files. these files should be considered(server.xml- where you define listening port, attributes, setenv.sh - place where you declare JVMoptions like Java_home, memory settings(-xms1024m-1GB) such as heap,log verbosity like printGC details...(issue xloggc got deprecated so got issue)
+Tomcat upgrade - tomcat 8.5.32 to 9.0.102 --> we are basically not touching the existing setup. we are using ansible playbook to first create folder structure and install the latestversion by extracting the zip placed in jumpbox. using jinja templates of all the configuration files like server.xml,setenv.sh, catalina.properties etc and push the files content to destserver and give them file permissions.
+****SSLHOSTConfig deprecated values of clientauth=false
+difference between tomcat 8 and 9 : java version requirement(java8 and later for tomcat9),,tomcat9 implements servlet 4.0,jsp2.3required by javaEE8 whereas tomcat8 supports earlier version
+****Integrating tomcat with Apache:
+Apache HTTP Server handles static content (HTML, CSS, JS, etc.), while Tomcat processes dynamic Java-based content. This setup is typically achieved using a connector like mod_proxy or mod_jk
+****Option 1:
+step-1 Using mod_proxy (Recommended)
+Ensure the mod_proxy and mod_proxy_ajp modules are enabled in Apache HTTP Server.
+Add these lines to httpd.conf if not already present:
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_ajp_module modules/mod_proxy_ajp.so
+Step-2: Add a ProxyPass configuration in Apache’s configuration file (httpd.conf or a virtual host file).
+<VirtualHost *:80>
+    ServerName example.com
+    ProxyRequests Off
+    ProxyPreserveHost On
+    # Forward requests to Tomcat via AJP
+    ProxyPass / ajp://localhost:8009/
+    ProxyPassReverse / ajp://localhost:8009/
+</VirtualHost>
+step-3: systemctl restart httpd
+step-4 : <Connector port="8009" protocol="AJP/1.3" redirectPort="8443" />
+*******Option 2: Using mod_jk
+yum install mod_jk
+Create a workers.properties file, typically in /etc/httpd/conf/ or /etc/apache2/
+workers.properties - worker.list=tomcat,worker.tomcat.type=ajp13,worker.tomcat.host=localhost,worker.tomcat.port=8009
+Add the following lines to httpd.conf or a virtual host configuration- 
+LoadModule jk_module modules/mod_jk.so
+JkWorkersFile /etc/httpd/conf/workers.properties
+JkLogFile /var/log/httpd/mod_jk.log
+JkLogLevel info
+<VirtualHost *:80>
+    ServerName example.com
+    JkMount /* tomcat
+</VirtualHost>
+systemctl restart httpd
+Ensure the AJP connector is enabled in Tomcat's server.xml as shown in Option 1 and restart Tomcat.
+********Option-3:
+Serve static files directly from Apache while proxying dynamic requests to Tomcat.,
+If you prefer HTTP communication instead of AJP, you can configure mod_proxy_http.
+Ensure mod_proxy and mod_proxy_http are enabled:
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+Configure Proxy Settings
+
+Example configuration in httpd.conf:
+<VirtualHost *:80>
+    ServerName example.com
+    ProxyRequests Off
+    ProxyPreserveHost On
+
+    # Forward requests to Tomcat via HTTP
+    ProxyPass / http://localhost:8080/
+    ProxyPassReverse / http://localhost:8080/
+</VirtualHost>
+Restart Services
+Restart both Apache HTTP Server and Tomcat:
+systemctl restart httpd
+systemctl restart tomcat
+Key Considerations
+Performance: AJP is generally faster than HTTP for forwarding requests.
+Security: Secure AJP connections by limiting access to trusted servers using a firewall or IP-based restrictions.
+Load Balancing: Both mod_proxy and mod_jk support load balancing if multiple Tomcat instances are used.
+Monitoring: Monitor logs (/var/log/httpd and Tomcat logs) to debug any issues.
+--Serve static files directly from Apache while proxying dynamic requests to Tomcat.,
+----Terminate SSL at Apache, allowing Tomcat to handle unencrypted traffic:
+*****How mod_proxy_http Works
+Apache HTTP Server receives incoming requests from clients.
+It forwards specific requests (e.g., /app) to Tomcat via HTTP.
+Tomcat processes the request and sends the response back to Apache, which then returns it to the client.
+This setup enables Apache to handle static resources (like HTML, CSS, JavaScript) efficiently while delegating dynamic Java-based content (like Servlets and JSPs) to Tomcat.
+****    # Forward requests to Tomcat running on localhost:8080
+    ProxyPass / http://localhost:8080/
+    ProxyPassReverse / http://localhost:8080/
+*****Environments where AJP is not required and where standard HTTP is sufficient, and the simplicity of mod_proxy_http is preferred.
+**********what is proxypass and proxypassreverse: 
+ProxyPass and ProxyPassReverse are directives used in Apache HTTP Server when configuring a reverse proxy. These directives control how Apache forwards client requests to backend servers and handles responses from those servers.
+Proxypass tells Apache where to forward incoming client requests.Example:if you want Apache to forward all requests for /app to a Tomcat server running on localhost:8080 then
+configure:ProxyPass /app http://localhost:8080/app
+The first argument (/app) specifies the URL path on the Apache server.
+The second argument (http://localhost:8080/app) specifies the destination URL on the backend server.
+ProxyPassReverse directive ensures that the response from the backend server is correctly rewritten for the client.
+When the backend server sends a response, it may include headers (e.g., Location, Set-Cookie, or Redirect) with URLs pointing back to itself.
+Without ProxyPassReverse, these headers might contain the backend server's address (e.g., http://localhost:8080) instead of the Apache server's public address (e.g., http://example.com).
+ProxyPassReverse rewrites such headers to use the Apache server's address
+Imagine a scenario where Apache acts as a reverse proxy for Tomcat:A client requests http://example.com/app/page....Apache forwards the request to http://localhost:8080/app/page.
+Tomcat responds with a redirect header:Location: http://localhost:8080/app/login ...now apache rewrites it to Location: http://example.com/app/login...The client stays unaware of the backend's internal address (localhost:8080).
+---------SSL Termination/SSL Offloading: Scenarios where backend servers lack the processing power for SSL/TLS encryption
+How It Works
+A client sends an HTTPS request to the server (e.g., https://example.com).
+The SSL/TLS handshake and encryption/decryption occur at the edge device (e.g., an Apache HTTP Server, load balancer, or dedicated hardware like an ADC).
+The edge device decrypts the HTTPS traffic, converting it to plain HTTP.
+The plain HTTP request is forwarded to the backend server (e.g., Tomcat, Node.js).
+The backend processes the request and sends a plain HTTP response back to the edge device.
+The edge device re-encrypts the response before sending it back to the client.
+Example : Apache HTTP Server as SSL Offloader: SSL Termination at Apache-  
+<VirtualHost *:443>
+    ServerName example.com
+# Enable SSL
+    SSLEngine on
+    SSLCertificateFile /path/to/cert.pem
+    SSLCertificateKeyFile /path/to/key.pem
+The client communicates with Apache over HTTPS.
+Apache decrypts the traffic and forwards it to Tomcat over HTTP.
+Ensure Tomcat listens for plain HTTP traffic (default is port 8080).
+No need to configure SSL in Tomcat.
+-----------------------END to END SSL:the SSL/TLS traffic remains encrypted all the way from the client to the backend server, without being decrypted at an intermediary layer (like a load balancer or reverse proxy).
+How It Works:
+The client initiates an HTTPS connection.
+The connection passes through an intermediary (e.g., load balancer, reverse proxy) without being decrypted.
+The backend server (e.g., Tomcat) terminates the SSL/TLS connection by decrypting the traffic.
+The response is encrypted by the backend server and sent back to the client through the intermediary.
+To achieve SSL passthrough in a setup involving Apache HTTP Server as a reverse proxy and Tomcat as the backend server, the traffic remains encrypted from the client to Tomcat, with Apache acting as a conduit without decrypting the SSL/TLS traffic.
+SSL/TLS Certificate: Installed and configured on the Tomcat server.
+Apache Module: Ensure the mod_proxy module is enabled in Apache.
+Network Configuration: Apache should forward the encrypted traffic to Tomcat without decrypting it.
+steps 1: configure tomcat for ssl- edit server.xml-enable https connector and specify keystore details
+<Connector port="8443" protocol="org.apache.coyote.http11.Http11NioProtocol"
+           maxThreads="200" SSLEnabled="true">
+    <SSLHostConfig>
+        <Certificate certificateKeystoreFile="conf/keystore.jks"
+                     type="RSA" />
+    </SSLHostConfig>
+</Connector>
+step-2 :Configure Apache for SSL Passthrough
+Apache HTTP Server does not natively support SSL passthrough in traditional HTTP proxy setups (mod_proxy). To achieve this, the mod_proxy module must be combined with mod_ssl and sometimes specific configurations for handling raw TCP streams.
+Enable required modules, 
+Edit the Apache configuration file (e.g., /etc/apache2/sites-available/your-site.conf) to use a proxy with passthrough
+<VirtualHost *:443>
+    ServerName example.com
+ # SSL Passthrough Configuration
+    SSLProxyEngine On
+    ProxyPass / https://localhost:8443/
+    ProxyPassReverse / https://localhost:8443/
+</VirtualHost>
+restart apache.now access application using https
+The SSL handshake occurs between the client and Tomcat, Apache forwards the encrypted traffic to Tomcat without decrypting it
+
+Comparison between - SSL offloading and SSL passthrough 
+Decrypts traffic at the proxy layer.-Proxy passes encrypted traffic as-is.
+Traffic between proxy and backend is unencrypted -Traffic remains encrypted end-to-end.
+Certificate Location	Managed at the proxy. - 	Managed at each backend server.
+---------------------------------------------------------------------------------------------------------------------------
+How everything works when SSL is configured in tomcat:
+When SSL is configured in Tomcat, it enables secure communication (HTTPS) between the client (e.g., a browser) and the Tomcat server by encrypting data using the SSL/TLS protocol
+To enable SSL in Tomcat:
+You configure an SSL connector in the server.xml file.
+A certificate (public key) and its private key are stored in a keystore, which Tomcat uses for encryption and decryption.
+How ssl works:
+Client Sends HTTPS Request
+A client (e.g., a web browser) initiates an HTTPS request to the Tomcat server, specifying a URL like https://example.com
+The client and Tomcat engage in the SSL/TLS handshake to establish a secure session.
+Tomcat sends its SSL certificate to the client.
+The certificate contains:The server's public key.Information about the certificate (e.g., domain, issuer, expiration).The client validates the certificate (using its CA trust store) to ensure it's legitimate.
+Session Key Exchange:The client generates a session key (used for encrypting data during the session).The session key is encrypted with Tomcat's public key (from the certificate) and sent to the server.Tomcat decrypts the session key using its private key.
+Both the client and Tomcat now have the same session key, enabling secure symmetric encryption for the remainder of the session.Once the handshake is complete:The client sends encrypted HTTP requests to Tomcat.Tomcat decrypts the requests, processes them, and sends encrypted responses back to the client.
+
+When to Use HTTPS to Backend:If you need to maintain encryption between Apache and the backend server, you can configure Apache to forward the traffic using HTTPS instead.
+Enable HTTPS on the Backend Server,Update Apache Configuration:(SSLProxyEngine On directive enables Apache to forward HTTPS requests.)With SSL Offloading, users access the application using HTTPS (e.g., https://example.com), but the backend communication (Apache ↔ Tomcat) happens over HTTP unless explicitly configured otherwise.
+********You need to enable SSL in Tomcat when you want the server to handle HTTPS traffic directly, without relying on an external reverse proxy like Apache or Nginx. This is especially useful in scenarios where Tomcat serves requests directly to clients or when security and compliance require end-to-end encryption.
+When to enable ssl in tomcat: If Tomcat is exposed to the internet and there’s no intermediate reverse proxy or load balancer.When security requirements demand that the data remain encrypted all the way to Tomcat (e.g., financial or healthcare applications).,
+*******Steps to Enable SSL in Tomcat:
+1-Generate a Keystore:keytool -genkey -alias tomcat -keyalg RSA -keystore keystore.jks -keysize 2048
+2-Generate a Certificate Signing Request (CSR):keytool -certreq -alias tomcat -file certreq.csr -keystore keystore.jks
+3-Submit the CSR to a trusted CA.,Import the signed certificate into the keystore:keytool -import -trustcacerts -alias tomcat -file certificate.crt -keystore keystore.jks
+4-  Configure SSL in Tomcat,Locate the <Connector> tag for HTTPS in server.xml key setting like port,certkeystorefile andpswd.
+Open a browser and access the application using HTTPS : https://your-domain:8443
+Advanced options: Configure specific TLS versions in the <SSLHostConfig>,For mutual Auth then Add clientAuth="true" in <SSLHostConfig> to require client certificates
+Use a custom truststore to validate incoming client certificates
+Best Practices:Use a certificate from a trusted CA in production.Disable older, insecure protocols (e.g., SSLv3, TLSv1.0).Regularly update the keystore and truststore passwords.
+-------------------------------------------------------------------------------------------------------------------------------- --------------
+How SSL Offloading Affects URL Access: (client perspective)Clients always access the application using HTTPS (e.g., https://example.com),The reverse proxy (e.g., Apache) handles SSL/TLS termination, decrypting the traffic.
+Backend perspective: if your backend server (Tomcat) is running on port 8080, Apache might forward requests to http://localhost:8080
+-------------Scenario: Accessing the Backend URL Directly
+If you bypass the reverse proxy and directly access the backend server (Tomcat) using its HTTP URL (e.g., http://localhost:8080), the following happens:
+
+Insecure Communication:
+
+Since no SSL/TLS encryption is applied, the communication is unencrypted.
+
+Suitable for internal, secured networks only.
+
+URL Access:
+If the backend application doesn't enforce HTTPS redirection, it will allow access over HTTP.
+When Should HTTP to Backend Be Used?Within Secure Networks:The connection between the reverse proxy and backend server is within a private network or VPN.
+To Reduce Load on Backend:Offloading SSL encryption/decryption to the reverse proxy reduces the computational load on the backend server.
+How to Prevent Direct HTTP Access to the Backend-To ensure that users can't bypass the reverse proxy and access the application via HTTP:
+Restrict Network Access:
+Use firewalls or security groups to block external access to the backend server (allow traffic only from the reverse proxy).
+Redirect HTTP to HTTPS (If Accessing Backend is Necessary):
+Configure the backend server (Tomcat) to redirect HTTP requests to HTTPS: In server.xml,locate http connector then specify https port as redirect port.This tells Tomcat to redirect all HTTP traffic to the specified HTTPS port.
+Best Practices
+Use firewalls or reverse proxies to block direct HTTP access if you are using SSL offloading.
+For production, use a valid SSL certificate issued by a trusted Certificate Authority (CA).
+Disable HTTP entirely if redirection is unnecessary (e.g., use only HTTPS).
+
+====================================================================
+
+*******Tomcat files
+*****server.xml: 
 <Connector port="8443"
            protocol="org.apache.coyote.http11.Http11NioProtocol"
            maxThreads="200"
@@ -39,12 +239,25 @@ server.xml:
            keystorePass="password"
            clientAuth="false"
            sslProtocol="TLS" />
+******setenv.sh:
+Explanation of Key Components
+JAVA_HOME:
+Specifies the JDK location for the Tomcat server.
+Example: /usr/lib/jvm/java-11-openjdk
+
+JAVA_OPTS:
+Contains Java runtime options applied globally to any Java process started by Tomcat.
+
+Common options:
+-Xms / -Xmx: Set initial and maximum heap size.
+-XX:+UseG1GC: Use the G1 Garbage Collector.
+-Dproperty=value: Define system properties.
+
+CATALINA_OPTS:
+Used for Tomcat-specific Java options (e.g., heap size, GC settings).
+Overrides JAVA_OPTS for Tomcat processes, such as the startup.sh and shutdown.sh scripts.
+Custom Environment Variables:
+Application-specific variables like APP_ENV, DB_URL, etc., can be defined here.
 
 
------> There is no IHS for tomcat, you will edit some files. these files should be considered(server.xml- where you define listening port, attributes, setenv.sh - place where you declare JVMoptions like Java_home, memory settings(-xms1024m-1GB) such as heap,log verbosity like printGC details...(issue xloggc got deprecated so got issue)
-Tomcat upgrade - tomcat 8.5.32 to 9.0.102 --> we are basically not touching the existing setup. we are using ansible playbook to first create folder structure and install the latestversion by extracting the zip placed in jumpbox. using jinja templates of all the configuration files like server.xml,setenv.sh, catalina.properties etc and push the files content to destserver and give them file permissions.
-****SSLHOSTConfig deprecated values of clientauth=false
-difference between tomcat 8 and 9 : java version requirement(java8 and later for tomcat9),,tomcat9 implements servlet 4.0,jsp2.3required by javaEE8 whereas tomcat8 supports earlier version
-****Integrating tomcat with Apache:
-Apache HTTP Server handles static content (HTML, CSS, JS, etc.), while Tomcat processes dynamic Java-based content. This setup is typically achieved using a connector like mod_proxy or mod_jk
-+
+----default ports
