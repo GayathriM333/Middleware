@@ -123,3 +123,24 @@ now cmd for fixpack - ./imcl install <offeringID_version> -repositories <reposit
 5. types of deployments
 6. linux commands
 7. jndi, connection pool, default ports, heap size, dumps, logs, ssl cmds, ldap/global security, troubleshooting(WAS.pdf),virtual host/contextroot, plugin file generation cmd, paths, configuration files
+
+
+Base Deployment: This is the default type where applications are installed and run directly on the server 1.
+Advanced Deployment: This type allows for more complex configurations, including clustering and load balancing1.
+Enterprise Application Deployment: Involves deploying EAR (Enterprise Archive) files, which can contain multiple modules like EJBs, web applications, and resource adapters2.
+Web Application Deployment: Involves deploying WAR (Web Archive) files, which are used for web applications2.
+Client Application Deployment: Deploying applications that run on client machines but interact with the server 3.
+Batch Application Deployment: For applications that process large volumes of data in batch mode 3.
+SIP Application Deployment: For applications using SIP (Session Initiation Protocol) servlets3.
+Each deployment type has its own set of configurations and requirements, making WebSphere Application Server a versatile platform for various enterprise needs.
+
+Administrative Console Port (WC_adminhost): 9060
+Administrative Console Secure Port (WC_adminhost_secure): 9043
+HTTP Transport Port (WC_defaulthost): 9080
+HTTPS Transport Secure Port (WC_defaulthost_secure): 9443
+Bootstrap Port (BOOTSTRAP_ADDRESS): 2809
+Cell Discovery Address (CELL_DISCOVERY_ADDRESS): 7276
+CSIV2 Client Authentication Listener Port (CSIV2_SSL_MUTUALAUTH_LISTENER_ADDRESS): 9402
+CSIV2 Server Authentication Listener Port (CSIV2_SSL_SERVERAUTH_LISTENER_ADDRESS): 9403
+High Availability Manager Communication Port (DCS_UNICAST_ADDRESS): 9353
+Internal JMS Server Port (JMSSERVER_SECURITY_PORT): 5557
