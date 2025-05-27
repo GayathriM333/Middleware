@@ -261,3 +261,52 @@ Application-specific variables like APP_ENV, DB_URL, etc., can be defined here.
 
 
 ----default ports
+
+=============================================================================================================================================================================
+=============================================================================================================================================================================
+Tomcat Course :
+
+Architecture of Tomcat: 
+Apache Tomcat is an open-source implementation of the Java Servlet.It acts as a web server and servlet container, primarily used to deploy and run Java web applications.
+*******Core components of Tomcat Architecture: 1) Catalina(servlet container): Implements servlet specifications, ,manages the lifecycle of servlets, mapping requests and session managements.
+2) coyote(HTTP Connector): Acts as HTTP connector. IT listens for incoming http request on particular port(default -8080), Passes requests to Catalina for processing,Supports HTTP/1.1 and AJP (Apache JServ Protocol)
+3) Jasper (JSP Engine): Tomcat’s JSP compiler., Converts JSP files into servlets for execution by Catalina, Supports dynamic content generation,Provides load balancing and session replication,Can be integrated with JDBC, JNDI, 
+****Request Processing Flow
+Tomcat Request Flow
+1. Client Request
+A web browser or HTTP client sends a request to a web application hosted on Tomcat.
+Example: http://localhost:8080/myapp/home
+2. Coyote HTTP Connector
+The Coyote component listens on a configured port (default is 8080).
+It receives the HTTP request and parses it into a format that Tomcat understands.
+It then forwards the request to the Catalina engine.
+3. Catalina Engine
+Catalina is the core servlet container.
+It uses the server.xml configuration to determine how to route the request.
+Catalina contains several subcomponents:
+Engine: Represents the entire Catalina servlet engine.
+Host: Represents a virtual host (e.g., localhost).
+Context: Represents a web application (e.g., /myapp).
+Wrapper: Represents a specific servlet.
+4. Mapping the Request
+Catalina maps the request URI to a specific web application context.
+Within the context, it maps the request to a servlet using the web.xml or annotations.
+5. Servlet Execution
+If the request is for a JSP page, the Jasper engine compiles it into a servlet.
+The servlet’s service() method is called.
+The servlet processes the request, interacts with business logic or databases, and generates a response.
+6. Response Generation
+The servlet writes the response to the HttpServletResponse object.
+Catalina sends this response back to the Coyote connector.
+7. Response Sent to Client
+Coyote formats the response into an HTTP response.
+It sends the response back to the client over the network.
+****Directory Structure (Simplified)
+/bin: Startup and shutdown scripts.
+/conf: Configuration files (e.g., server.xml, web.xml).
+/lib: Libraries required by Tomcat.
+/logs: Log files.
+/webapps: Deployed web applications.
+/work: Temporary files and compiled JSPs.
+/temp: Temporary files used by Tomcat.
+
