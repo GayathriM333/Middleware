@@ -125,6 +125,15 @@ now cmd for fixpack - ./imcl install <offeringID_version> -repositories <reposit
 7. jndi, connection pool, default ports, heap size, dumps, logs, ssl cmds, ldap/global security, troubleshooting(WAS.pdf),virtual host/contextroot, plugin file generation cmd, paths, configuration files
 
 
+Heap Size: Heap size refers to the amount of memory allocated to the heap, a region in memory used for dynamic allocation
+How to update heap size:
+Log in to the WebSphere admin console.
+Expand System administration > Node agents --> Expand Java and Process Management and select Process definition-->Select Java Virtual Machine-->Update the Initial heap size and/or Maximum heap size.
+Click Apply and then Save.
+Restart the node agent for the changes to take effect
+Initial heap size: The amount of memory allocated to the heap when the JVM starts i.e., in general 256 MB
+Maximum heap size: The maximum amount of memory the heap can grow to during the application's execution i.e., 32-bit JVM: Up to 1 GB 2 and for 64-bit JVM: Can be much larger, often up to 32 GB.
+
 Base Deployment: This is the default type where applications are installed and run directly on the server 1.
 Advanced Deployment: This type allows for more complex configurations, including clustering and load balancing1.
 Enterprise Application Deployment: Involves deploying EAR (Enterprise Archive) files, which can contain multiple modules like EJBs, web applications, and resource adapters2.
