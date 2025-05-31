@@ -310,3 +310,7 @@ It sends the response back to the client over the network.
 /work: Temporary files and compiled JSPs.
 /temp: Temporary files used by Tomcat.
 
+
+
+
+CMD_setDEaful.properties, virtual host issue, clearclasscache,lib filesmissing in tomcat ect
