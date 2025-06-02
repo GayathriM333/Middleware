@@ -154,3 +154,31 @@ CSIV2 Server Authentication Listener Port (CSIV2_SSL_SERVERAUTH_LISTENER_ADDRESS
 High Availability Manager Communication Port (DCS_UNICAST_ADDRESS): 9353
 Internal JMS Server Port (JMSSERVER_SECURITY_PORT): 5557
 
+Common errors/issues we face:
+** Configuration Issues:
+Incorrect JVM settings – Misconfigured heap sizes or garbage collection policies can lead to performance degradation or crashes.
+Classloader conflicts – Especially when deploying multiple applications with overlapping libraries.
+Security configuration errors – SSL/TLS misconfigurations, expired certificates, or incorrect JAAS settings.
+** Deployment Issues
+Application deployment failures – Due to missing dependencies, incorrect EAR/WAR packaging, or incompatible Java versions.
+Stuck or failed application start – Often caused by initialization errors or resource lookup failures (e.g., JNDI).
+** Performance Issues
+High CPU or memory usage – Often due to memory leaks, inefficient code, or excessive session replication.
+Thread pool exhaustion – When too many concurrent requests exceed the configured thread pool size.
+Slow startup times – Caused by large applications, excessive logging, or complex initialization logic.
+** Connectivity Issues
+Database connection failures – Due to incorrect JDBC settings, network issues, or database unavailability.
+JMS/MQ connection problems – Misconfigured messaging providers or network/firewall issues.
+Cluster communication errors – Problems with node synchronization or session replication.
+**Logging and Monitoring Issues
+Insufficient logging – Makes it hard to diagnose problems.
+Log file rotation issues – Can lead to disk space exhaustion.
+PMI (Performance Monitoring Infrastructure) overhead – If not configured properly, it can impact performance.
+** Version and Compatibility Issues
+Java version mismatches – Between WAS and deployed applications.
+Unsupported APIs – Especially when migrating from older WAS versions.
+Fix pack inconsistencies – Across nodes in a cluster.
+** Administrative Console Issues
+Console not loading or crashing – Often due to browser compatibility or server-side errors.
+Sync issues in ND (Network Deployment) – When changes in the Deployment Manager are not reflected in nodes.
+
